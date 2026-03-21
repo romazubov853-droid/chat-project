@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Чат</title>
+</head>
+<body>
+
+<h2>Чат</h2>
+
+<input id="username" placeholder="Твоё имя" />
+<br><br>
+
+<ul id="messages"></ul>
+
+<input id="input" placeholder="Сообщение..." />
+<button onclick="sendMessage()">Отправить</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    function sendMessage() {
+        const username = document.getElementById("username").value;
+        const input = document.getElementById("input");
+
+        const msg = {
+            user: username,
+            text: input.value
+        };
+
+        socket.emit("chat message", msg);
+        input.value = "";
+    }
+
+    socket.on("chat message", function(msg) {
+        const li = document.createElement("li");
+        li.textContent = msg.user + ": " + msg.text;
+        document.getElementById("messages").appendChild(li);
+    });
+</script>
+
+</body>
+</html>
