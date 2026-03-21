@@ -18,4 +18,7 @@ io.on("connection", (socket) => {
 
 server.listen(3000, () => {
   console.log("server running")
+  app.get("/", (req, res) => {
+    res.send("Сервер работает 🚀")
+  })
 })
