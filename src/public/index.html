@@ -27,21 +27,25 @@
     const input = document.getElementById("input")
     const messages = document.getElementById("messages")
 
-function addMessage(msg) {
-  const item = document.createElement("li")
+    function addMessage(msg) {
+      const item = document.createElement("li")
+      item.textContent = msg.text
+      messages.appendChild(item)
+      window.scrollTo(0, document.body.scrollHeight)
+    }
 
-item.textContent = msg.text
+    // 🔥 подключение
+    socket.on("connect", () => {
+      console.log("✅ Socket подключен")
+    })
 
-  messages.appendChild(item)
-}
-
-    // 🔥 загрузка старых сообщений
+    // 🔥 старые сообщения
     socket.on("loadMessages", (msgs) => {
       messages.innerHTML = ""
       msgs.forEach(addMessage)
     })
 
-    // 🔥 получение новых
+    // 🔥 новые сообщения
     socket.on("chatMessage", (msg) => {
       addMessage(msg)
     })
@@ -49,6 +53,7 @@ item.textContent = msg.text
     // 🔥 отправка
     form.addEventListener("submit", (e) => {
       e.preventDefault()
+
       if (input.value) {
         socket.emit("chatMessage", input.value)
         input.value = ""
