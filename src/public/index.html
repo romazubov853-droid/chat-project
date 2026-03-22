@@ -27,11 +27,13 @@
     const input = document.getElementById("input")
     const messages = document.getElementById("messages")
 
-    function addMessage(msg) {
-      const item = document.createElement("li")
-      item.textContent = msg.text
-      messages.appendChild(item)
-    }
+function addMessage(msg) {
+  const item = document.createElement("li")
+
+item.textContent = msg.text
+
+  messages.appendChild(item)
+}
 
     // 🔥 загрузка старых сообщений
     socket.on("loadMessages", (msgs) => {

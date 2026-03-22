@@ -7,10 +7,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 🔗 ВСТАВЬ СЮДА СВОЮ СТРОКУ
+// 🔗 подключение к MongoDB
 mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB подключена"))
-  .catch(err => console.log(err));
+  .then(() => console.log("✅ MongoDB подключена"))
+  .catch(err => console.log("❌ MongoDB ошибка:", err));
 
 // 📦 модель сообщения
 const Message = mongoose.model("Message", {
@@ -18,39 +18,38 @@ const Message = mongoose.model("Message", {
   createdAt: { type: Date, default: Date.now }
 });
 
+// 📁 статика
 app.use(express.static("src/public"));
 
-// 🔌 socket
-io.on("connection", async (socket) => {
-  console.log("Пользователь подключился");
-
-  // отправляем старые сообщения
-  const messages = await Message.find().sort({ createdAt: 1 });
-  socket.emit("loadMessages", messages);
-
-  // новое сообщение
-  socket.on("chatMessage", async (msg) => {
-    const message = new Message({ text: msg });
-    await message.save();
-
-    io.emit("chatMessage", message);
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log("Server started on port", PORT);
-});
+// 🔌 socket (ОДИН!)
 io.on("connection", async (socket) => {
   console.log("🔥 Пользователь подключился");
 
-  socket.on("chatMessage", async (msg) => {
-    console.log("📩 Сообщение:", msg);
+  try {
+    // 📥 загрузка старых сообщений
+    const messages = await Message.find().sort({ createdAt: 1 });
+    socket.emit("loadMessages", messages);
 
-    const message = new Message({ text: msg });
-    await message.save();
+    // 📤 новое сообщение
+    socket.on("chatMessage", async (msg) => {
+      console.log("📩 Сообщение:", msg);
 
-    io.emit("chatMessage", message);
-  });
+      const message = new Message({ text: msg });
+      await message.save();
+
+      console.log("💾 Сохранено в БД");
+
+      io.emit("chatMessage", message);
+    });
+
+  } catch (err) {
+    console.log("❌ Ошибка:", err);
+  }
+});
+
+// 🚀 запуск сервера
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  console.log("🚀 Server started on port", PORT);
 });
