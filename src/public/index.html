@@ -9,9 +9,14 @@
     </style>
 </head>
 <body>
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+
 <h2>💬 Chat</h2>
+
+<select id="roomSelect">
+    <option value="general">Общий чат</option>
+    <option value="room1">Комната 1</option>
+    <option value="room2">Комната 2</option>
+</select>
 
 <ul id="messages"></ul>
 
@@ -19,51 +24,57 @@
     <input id="input" autocomplete="off" placeholder="Напиши сообщение..." />
     <button>Отправить</button>
 </form>
-<select id="roomSelect">
-    <option value="general">Общий чат</option>
-    <option value="room1">Комната 1</option>
-    <option value="room2">Комната 2</option>
-</select>
+
+<!-- socket -->
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
-    const socket = io()
+    const socket = io();
 
-    const form = document.getElementById("form")
-    const input = document.getElementById("input")
-    const messages = document.getElementById("messages")
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const messages = document.getElementById("messages");
+    const roomSelect = document.getElementById("roomSelect");
 
-    function addMessage(msg) {
-      const item = document.createElement("li")
-      item.textContent = msg.text
-      messages.appendChild(item)
-      window.scrollTo(0, document.body.scrollHeight)
-    }
-
-    // 🔥 подключение
+    // подключение
     socket.on("connect", () => {
-      console.log("✅ Socket подключен")
-    })
+      console.log("✅ Socket подключен");
+      socket.emit("joinRoom", roomSelect.value);
+    });
 
-    // 🔥 старые сообщения
+    // смена комнаты
+    roomSelect.addEventListener("change", () => {
+      messages.innerHTML = "";
+      socket.emit("joinRoom", roomSelect.value);
+    });
+
+    // загрузка сообщений
     socket.on("loadMessages", (msgs) => {
-      messages.innerHTML = ""
-      msgs.forEach(addMessage)
-    })
+      messages.innerHTML = "";
+      msgs.forEach(addMessage);
+    });
 
-    // 🔥 новые сообщения
+    // новое сообщение
     socket.on("chatMessage", (msg) => {
-      addMessage(msg)
-    })
+      addMessage(msg);
+    });
 
-    // 🔥 отправка
+    // отправка
     form.addEventListener("submit", (e) => {
-      e.preventDefault()
+      e.preventDefault();
 
       if (input.value) {
-        socket.emit("chatMessage", input.value)
-        input.value = ""
+        socket.emit("chatMessage", input.value);
+        input.value = "";
       }
-    })
+    });
+
+    // отображение
+    function addMessage(msg) {
+      const item = document.createElement("li");
+      item.textContent = msg.text;
+      messages.appendChild(item);
+    }
 </script>
 
 </body>
