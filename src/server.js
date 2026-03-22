@@ -1,29 +1,41 @@
-const express = require("express")
-const http = require("http")
-const { Server } = require("socket.io")
-const path = require("path")
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const mongoose = require("mongoose");
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-})
+// 🔗 ВСТАВЬ СЮДА СВОЮ СТРОКУ
+mongoose.connect("mongodb+srv://romazubov853_db_user:ТВОЙ_ПАРОЛЬ@cluster0.ciqcbrl.mongodb.net/chat?retryWrites=true&w=majority")
+.then(() => console.log("MongoDB подключена"))
+.catch(err => console.log(err));
 
-// 👇 подключаем фронт
-app.use(express.static(path.join(__dirname, "public")))
+// 📦 модель сообщения
+const Message = mongoose.model("Message", {
+  text: String,
+  createdAt: { type: Date, default: Date.now }
+});
 
-// 👇 чат логика
-io.on("connection", (socket) => {
-  console.log("user connected")
+app.use(express.static("src/public"));
 
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", msg) // отправка всем
-  })
-})
+// 🔌 socket
+io.on("connection", async (socket) => {
+  console.log("Пользователь подключился");
 
-server.listen(3000, () => {
-  console.log("server running")
-})
+  // отправляем старые сообщения
+  const messages = await Message.find().sort({ createdAt: 1 });
+  socket.emit("loadMessages", messages);
+
+  // новое сообщение
+  socket.on("chatMessage", async (msg) => {
+    const message = new Message({ text: msg });
+    await message.save();
+
+    io.emit("chatMessage", message);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log("Сервер запущен"));
