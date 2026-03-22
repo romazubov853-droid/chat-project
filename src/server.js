@@ -8,9 +8,9 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // 🔗 ВСТАВЬ СЮДА СВОЮ СТРОКУ
-mongoose.connect("mongodb+srv://romazubov853_db_user:kICIRCfpmzB75iSq@cluster0.ciqcbrl.mongodb.net/chat?retryWrites=true&w=majority")
-.then(() => console.log("MongoDB подключена"))
-.catch(err => console.log(err));
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => console.log("MongoDB подключена"))
+  .catch(err => console.log(err));
 
 // 📦 модель сообщения
 const Message = mongoose.model("Message", {
@@ -41,4 +41,16 @@ const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
   console.log("Server started on port", PORT);
+});
+io.on("connection", async (socket) => {
+  console.log("🔥 Пользователь подключился");
+
+  socket.on("chatMessage", async (msg) => {
+    console.log("📩 Сообщение:", msg);
+
+    const message = new Message({ text: msg });
+    await message.save();
+
+    io.emit("chatMessage", message);
+  });
 });

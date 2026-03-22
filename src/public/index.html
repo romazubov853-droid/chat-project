@@ -31,8 +31,18 @@
       const item = document.createElement("li")
       item.textContent = msg.text
       messages.appendChild(item)
-      window.scrollTo(0, document.body.scrollHeight)
     }
+
+    // 🔥 загрузка старых сообщений
+    socket.on("loadMessages", (msgs) => {
+      messages.innerHTML = ""
+      msgs.forEach(addMessage)
+    })
+
+    // 🔥 получение новых
+    socket.on("chatMessage", (msg) => {
+      addMessage(msg)
+    })
 
     // 🔥 отправка
     form.addEventListener("submit", (e) => {
@@ -41,17 +51,6 @@
         socket.emit("chatMessage", input.value)
         input.value = ""
       }
-    })
-
-    // 🔥 получение новых сообщений
-    socket.on("chatMessage", (msg) => {
-      addMessage(msg)
-    })
-
-    // 🔥 загрузка старых сообщений
-    socket.on("loadMessages", (msgs) => {
-      messages.innerHTML = "" // очистка
-      msgs.forEach(addMessage)
     })
 </script>
 
