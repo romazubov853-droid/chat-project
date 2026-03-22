@@ -9,7 +9,8 @@
     </style>
 </head>
 <body>
-
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
 <h2>💬 Chat</h2>
 
 <ul id="messages"></ul>
@@ -18,7 +19,11 @@
     <input id="input" autocomplete="off" placeholder="Напиши сообщение..." />
     <button>Отправить</button>
 </form>
-
+<select id="roomSelect">
+    <option value="general">Общий чат</option>
+    <option value="room1">Комната 1</option>
+    <option value="room2">Комната 2</option>
+</select>
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io()

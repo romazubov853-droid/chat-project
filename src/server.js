@@ -7,47 +7,51 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 🔗 подключение к MongoDB
+// MongoDB
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("✅ MongoDB подключена"))
   .catch(err => console.log("❌ MongoDB ошибка:", err));
 
-// 📦 модель сообщения
+// модель
 const Message = mongoose.model("Message", {
   text: String,
+  room: String,
   createdAt: { type: Date, default: Date.now }
 });
 
-// 📁 статика
 app.use(express.static("src/public"));
 
-// 🔌 socket (ОДИН!)
-io.on("connection", async (socket) => {
+// socket
+io.on("connection", (socket) => {
   console.log("🔥 Пользователь подключился");
 
-  try {
-    // 📥 загрузка старых сообщений
-    const messages = await Message.find().sort({ createdAt: 1 });
+  // вход в комнату
+  socket.on("joinRoom", async (room) => {
+    socket.join(room);
+    socket.room = room;
+
+    console.log(`➡️ Вошёл в комнату: ${room}`);
+
+    // загрузка сообщений комнаты
+    const messages = await Message.find({ room }).sort({ createdAt: 1 });
     socket.emit("loadMessages", messages);
+  });
 
-    // 📤 новое сообщение
-    socket.on("chatMessage", async (msg) => {
-      console.log("📩 Сообщение:", msg);
+  // сообщение
+  socket.on("chatMessage", async (msg) => {
+    if (!socket.room) return;
 
-      const message = new Message({ text: msg });
-      await message.save();
-
-      console.log("💾 Сохранено в БД");
-
-      io.emit("chatMessage", message);
+    const message = new Message({
+      text: msg,
+      room: socket.room
     });
 
-  } catch (err) {
-    console.log("❌ Ошибка:", err);
-  }
+    await message.save();
+
+    io.to(socket.room).emit("chatMessage", message);
+  });
 });
 
-// 🚀 запуск сервера
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
