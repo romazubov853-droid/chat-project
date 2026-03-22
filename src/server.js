@@ -39,6 +39,6 @@ io.on("connection", async (socket) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log("Server started");
+server.listen(PORT, () => {
+  console.log("Server started on port", PORT);
 });

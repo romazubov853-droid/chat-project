@@ -27,19 +27,31 @@
     const input = document.getElementById("input")
     const messages = document.getElementById("messages")
 
+    function addMessage(msg) {
+      const item = document.createElement("li")
+      item.textContent = msg.text
+      messages.appendChild(item)
+      window.scrollTo(0, document.body.scrollHeight)
+    }
+
+    // 🔥 отправка
     form.addEventListener("submit", (e) => {
       e.preventDefault()
       if (input.value) {
-        socket.emit("chat message", input.value)
+        socket.emit("chatMessage", input.value)
         input.value = ""
       }
     })
 
-    socket.on("chat message", (msg) => {
-      const item = document.createElement("li")
-      item.textContent = msg
-      messages.appendChild(item)
-      window.scrollTo(0, document.body.scrollHeight)
+    // 🔥 получение новых сообщений
+    socket.on("chatMessage", (msg) => {
+      addMessage(msg)
+    })
+
+    // 🔥 загрузка старых сообщений
+    socket.on("loadMessages", (msgs) => {
+      messages.innerHTML = "" // очистка
+      msgs.forEach(addMessage)
     })
 </script>
 
